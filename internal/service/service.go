@@ -33,7 +33,6 @@ func init() {
 }
 
 func (s *Service) Login(discordUserID string) (string, error) {
-	user := &domain.User{}
 	user, err := s.Repo.GetUserByDiscordUserID(discordUserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

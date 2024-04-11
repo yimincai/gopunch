@@ -23,7 +23,10 @@ type Bot struct {
 func New() *Bot {
 	// create folder if not exists
 	if _, err := os.Stat("./bot_files"); os.IsNotExist(err) {
-		os.Mkdir("./bot_files", os.ModePerm)
+		err := os.Mkdir("./bot_files", os.ModePerm)
+		if err != nil {
+			logger.Panicf("Error creating bot_files folder: " + err.Error())
+		}
 	}
 
 	cfg := config.New()
