@@ -19,7 +19,7 @@ var zapLogger *zap.Logger
 
 func init() {
 	ljl := &lumberjack.Logger{
-		Filename:   "./bot_files/logs/punch-bot.log",
+		Filename:   "./bot_files/punch-bot.log",
 		MaxSize:    10, // megabytes
 		MaxAge:     30, // days
 		MaxBackups: 3,

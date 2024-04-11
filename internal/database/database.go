@@ -23,11 +23,11 @@ func New(env *config.Config) (*gorm.DB, error) {
 	)
 
 	// create folder if not exists
-	if _, err := os.Stat("./bot_files/db"); os.IsNotExist(err) {
-		os.Mkdir("./bot_files/db", os.ModePerm)
+	if _, err := os.Stat("./bot_files"); os.IsNotExist(err) {
+		os.Mkdir("./bot_files", os.ModePerm)
 	}
 
-	db, err := gorm.Open(sqlite.Open("./bot_files/db/bot.db"), &gorm.Config{
+	db, err := gorm.Open(sqlite.Open("./bot_files/bot.db"), &gorm.Config{
 		Logger: l,
 	})
 	if err != nil {
