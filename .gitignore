@@ -11,5 +11,4 @@ vendor/
 *.out
 backup/
 logs/
-*.json
 bot_files/

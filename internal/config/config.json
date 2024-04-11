@@ -1,0 +1,7 @@
+{
+    "prefix": "!",
+    "discord_token": "your_discord_token",
+    "endpoint": "your_api_endpoint",
+    "login_api_path": "/api/your_login_api_path",
+    "punch_api_path": "/api/your_punch_api_path"
+}

@@ -31,14 +31,16 @@ func New() *Config {
 
 		p := &Config{
 			Prefix:       cfg.Prefix,
-			DiscordToken: "********",
+			DiscordToken: "",
 			Endpoint:     cfg.Endpoint,
 			PunchApiPath: cfg.PunchApiPath,
 			LoginApiPath: cfg.LoginApiPath,
 		}
 
 		if cfg.DiscordToken == "" {
-			p.DiscordToken = ""
+			panic("Discord token is required")
+		} else {
+			p.DiscordToken = cfg.DiscordToken
 		}
 
 		logger.Infof("Config: \n%s", prettyPrint(p))
