@@ -14,13 +14,13 @@ import (
 )
 
 var (
-	GoVersion = runtime.Version()
-	OSArch    = fmt.Sprintf("%v/%v", runtime.GOOS, runtime.GOARCH)
+	goVersion = runtime.Version()
+	oSArch    = fmt.Sprintf("%v/%v", runtime.GOOS, runtime.GOARCH)
 )
 
 func main() {
-	logger.Infof("Go Version: %s", GoVersion)
-	logger.Infof("OS/Arch: %s", OSArch)
+	logger.Infof("Go Version: %s", goVersion)
+	logger.Infof("OS/Arch: %s", oSArch)
 	server := bot.New()
 
 	// Register events
