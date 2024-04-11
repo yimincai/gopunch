@@ -12,3 +12,4 @@ vendor/
 backup/
 logs/
 *.json
+bot_files/
