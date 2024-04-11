@@ -5,6 +5,7 @@ import (
 
 	"github.com/yimincai/gopunch/domain"
 	"github.com/yimincai/gopunch/internal/bot"
+	"github.com/yimincai/gopunch/internal/errs"
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
 )
@@ -28,8 +29,7 @@ func (c *CommandRegister) Exec(ctx *bot.Context) (err error) {
 		response := fmt.Sprintf("You are already registered as %s \nif you want to overwrite it, please using `%sForceRegister <account> <password>`", existUser.Account, c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
+			return errs.ErrSendingMessage
 		}
 		return
 	}
@@ -38,8 +38,7 @@ func (c *CommandRegister) Exec(ctx *bot.Context) (err error) {
 		usage := fmt.Sprintf("Usage: %sRegister <account> <password>", c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, usage)
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
+			return errs.ErrSendingMessage
 		}
 		return
 	}
@@ -53,34 +52,22 @@ func (c *CommandRegister) Exec(ctx *bot.Context) (err error) {
 
 	_, err = c.Svc.TryToLogin(user.Account, user.Password)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Verify failed, please check your account and password")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrLoginVerifyFailed
 	}
 
 	err = c.Svc.Register(user)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, err.Error())
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrInternalError
 	}
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Registered successfully, You are now able to use the system")
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
-		return
+		return errs.ErrSendingMessage
 	}
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("You are registered as %s", user.Account))
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
-		return
+		return errs.ErrSendingMessage
 	}
 
 	response := "```"
@@ -97,7 +84,7 @@ func (c *CommandRegister) Exec(ctx *bot.Context) (err error) {
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
+		return errs.ErrSendingMessage
 	}
 
 	logger.Infof("Command Executed: %v, UserID: %s", c.Invokes(), ctx.Message.Author.ID)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/yimincai/gopunch/internal/bot"
+	"github.com/yimincai/gopunch/internal/errs"
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
 )
@@ -35,7 +36,7 @@ func (c *CommandDefaultSchedule) Exec(ctx *bot.Context) (err error) {
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
+		return errs.ErrSendingMessage
 	}
 
 	logger.Infof("Command Executed: %v, UserID: %s", c.Invokes(), ctx.Message.Author.ID)

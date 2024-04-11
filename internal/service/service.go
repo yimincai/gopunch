@@ -198,7 +198,7 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 			}
 
 			ramdomDelay := time.Duration(R.Intn(29))*time.Minute + time.Duration(R.Intn(60))*time.Second
-			logger.Debugf("%s punch will be delayed for %s, executed at %s", ramdomDelay, user.Account, utils.TimeFormat(time.Now().Add(ramdomDelay)))
+			logger.Debugf("%s punch will be delayed for %s, executed at %s", user.Account, ramdomDelay, utils.TimeFormat(time.Now().Add(ramdomDelay)))
 			time.Sleep(ramdomDelay)
 			accessToken, err := s.Login(u.DiscordUserID)
 			if err != nil {
@@ -218,7 +218,7 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 			}
 
 			// notify user that punch is done with bot
-			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("%s punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
+			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
 			if err != nil {
 				logger.Errorf("Error sending message: %s", err)
 			}
@@ -240,7 +240,7 @@ func (s *Service) SetDayOff(discordUserID string, year, month, day int) error {
 	}
 
 	if !user.IsEnable {
-		return errs.ErrUserDisabled
+		return errs.ErrUserNotEnabled
 	}
 
 	dayoff := &domain.DayOff{

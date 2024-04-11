@@ -23,20 +23,17 @@ func (c *CommandGetUsers) Description() string {
 func (c *CommandGetUsers) Exec(ctx *bot.Context) (err error) {
 	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrUserNotFound.Error())
-		return
+		return errs.ErrUserNotFound
 	}
 
 	if !user.IsEnable {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrUserDisabled.Error())
-		return
+		return errs.ErrUserNotEnabled
 	}
 
 	var users []*domain.User
 	users, err = c.Svc.Repo.GetUsers()
 	if err != nil {
-		logger.Errorf("Error getting users: %s", err)
-		return
+		return errs.ErrInternalError
 	}
 
 	var response string
@@ -46,7 +43,7 @@ func (c *CommandGetUsers) Exec(ctx *bot.Context) (err error) {
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
+		return errs.ErrSendingMessage
 	}
 
 	logger.Info("Command Executed: ", c.Invokes(), " UserID: ", ctx.Message.Author.ID)

@@ -31,7 +31,6 @@ func (c *CommandDayOff) Exec(ctx *bot.Context) (err error) {
 		usage := fmt.Sprintf("Usage: %sDayOff <date>, format example: %sDayOff 2024/12/31", c.Svc.Cfg.Prefix, c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, usage)
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
 			return err
 		}
 		return
@@ -42,21 +41,18 @@ func (c *CommandDayOff) Exec(ctx *bot.Context) (err error) {
 		usage := fmt.Sprintf("Usage: %sDayOff <date>, format example: %sDayOff 2024/12/31", c.Svc.Cfg.Prefix, c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, usage)
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
+			return errs.ErrSendingMessage
 		}
 		return
 	}
 
 	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrUserNotFound.Error())
-		return
+		return errs.ErrUserNotFound
 	}
 
 	if !user.IsEnable {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrUserDisabled.Error())
-		return
+		return errs.ErrUserNotEnabled
 	}
 
 	year := sp[0]
@@ -66,75 +62,41 @@ func (c *CommandDayOff) Exec(ctx *bot.Context) (err error) {
 	//case to int
 	y, err := strconv.Atoi(year)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Invalid date")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrInvalidDate
 	}
 
 	m, err := strconv.Atoi(month)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Invalid date")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
+		return errs.ErrInvalidDate
 	}
 
 	d, err := strconv.Atoi(day)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Invalid date")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
+		return errs.ErrInvalidDate
 	}
 
 	// validate date
 	if !utils.IsVaildateDate(y, m, d) {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Invalid date")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrInvalidDate
 	}
 
 	existsDayOff, err := c.Svc.Repo.FindUserDayOffByDate(user.ID, y, m, d)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrInternalError.Error())
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrInternalError
 	}
 
 	if existsDayOff != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Day off already set")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrDayOffAlreadySet
 	}
 
 	err = c.Svc.SetDayOff(ctx.Message.Author.ID, y, m, d)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, err.Error())
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrInternalError
 	}
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("Day off set successfully, %s/%s/%s", year, month, day))
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
-		return
+		return errs.ErrSendingMessage
 	}
 
 	logger.Infof("Command Executed: %v, UserID: %s", c.Invokes(), ctx.Message.Author.ID)

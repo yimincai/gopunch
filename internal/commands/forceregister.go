@@ -29,8 +29,7 @@ func (c *CommandForceRegister) Exec(ctx *bot.Context) (err error) {
 		usage := fmt.Sprintf("Usage: %sForceRegister <account> <password>", c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, usage)
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
+			return errs.ErrSendingMessage
 		}
 		return
 	}
@@ -38,29 +37,14 @@ func (c *CommandForceRegister) Exec(ctx *bot.Context) (err error) {
 	existsUser, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Error getting user, did you registered?")
-			if err != nil {
-				logger.Errorf("Error sending message: %s", err)
-				return
-			}
-			return
+			return errs.ErrUserNotFound
 		}
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrInternalError.Error())
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return
-		}
-		return
+		return errs.ErrInternalError
 	}
 
 	err = c.Svc.Repo.DeleteUserByAccount(existsUser.Account)
 	if err != nil {
-		logger.Errorf("Error deleting user: %s", err)
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, errs.ErrInternalError.Error())
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-		}
-		return
+		return errs.ErrDeleteUserFailed
 	}
 
 	user := &domain.User{
@@ -72,34 +56,22 @@ func (c *CommandForceRegister) Exec(ctx *bot.Context) (err error) {
 
 	_, err = c.Svc.TryToLogin(user.Account, user.Password)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Verify failed, please check your account and password")
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrLoginVerifyFailed
 	}
 
 	err = c.Svc.Register(user)
 	if err != nil {
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, err.Error())
-		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
-			return err
-		}
-		return
+		return errs.ErrInternalError
 	}
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "Registered successfully, You are now able to use the system")
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
-		return
+		return errs.ErrSendingMessage
 	}
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, fmt.Sprintf("You are registered as %s", user.Account))
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
-		return
+		return errs.ErrSendingMessage
 	}
 
 	response := "```"
@@ -116,7 +88,7 @@ func (c *CommandForceRegister) Exec(ctx *bot.Context) (err error) {
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
+		return errs.ErrSendingMessage
 	}
 
 	logger.Infof("Command Executed: %v, UserID: %s", c.Invokes(), ctx.Message.Author.ID)

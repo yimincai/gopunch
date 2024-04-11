@@ -12,3 +12,4 @@ vendor/
 backup/
 logs/
 bot_files/
+config.json

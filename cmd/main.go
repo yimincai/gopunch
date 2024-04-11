@@ -66,8 +66,11 @@ func registerCommands(b *bot.Bot) {
 	// Register commands here
 	cmdHandler := bot.NewCommandHandler(b.Cfg.Prefix)
 	cmdHandler.OnError = func(ctx *bot.Context, err error) {
-		ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "An error occurred while executing the command. \nerror: "+err.Error())
 		logger.Errorf("Error executing command: %v", err)
+		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "⚠️ An error occurred while executing the command. \n❌ error: "+err.Error())
+		if err != nil {
+			logger.Errorf("Error sending message: %v", err)
+		}
 	}
 
 	// cmdHandler.RegisterCommand(&commands.CommandPing{})
