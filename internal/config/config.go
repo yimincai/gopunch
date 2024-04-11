@@ -2,18 +2,18 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 
+	"github.com/spf13/viper"
 	"github.com/yimincai/gopunch/pkg/logger"
 )
 
 type Config struct {
-	Prefix       string `json:"prefix"`
-	DiscordToken string `json:"discord_token"`
-	Endpoint     string `json:"endpoint"`
-	PunchApiPath string `json:"punch_api_path"`
-	LoginApiPath string `json:"login_api_path"`
+	Prefix       string `mapstructure:"PREFIX"`
+	DiscordToken string `mapstructure:"DISCORD_TOKEN"`
+	Endpoint     string `mapstructure:"ENDPOINT"`
+	PunchApiPath string `mapstructure:"PUNCH_API_PATH"`
+	LoginApiPath string `mapstructure:"LOGIN_API_PATH"`
 }
 
 var cfg *Config
@@ -24,26 +24,29 @@ var cfgOnce sync.Once
 // .env file is for local development, environment variable is for production
 func New() *Config {
 	cfgOnce.Do(func() {
-		err := json.Unmarshal(EnvFile, &cfg)
+		viper.SetConfigFile(".env")
+		err := viper.ReadInConfig()
 		if err != nil {
-			panic(fmt.Sprintf("Error reading config file: %s\n", err))
+			logger.Warnf("Using environment variables")
+
+			viper.AutomaticEnv()
+			_ = viper.BindEnv("PREFIX")
+			_ = viper.BindEnv("DISCORD_TOKEN")
+			_ = viper.BindEnv("ENDPOINT")
+			_ = viper.BindEnv("PUNCH_API_PATH")
+			_ = viper.BindEnv("LOGIN_API_PATH")
 		}
 
-		p := &Config{
-			Prefix:       cfg.Prefix,
-			DiscordToken: "",
-			Endpoint:     cfg.Endpoint,
-			PunchApiPath: cfg.PunchApiPath,
-			LoginApiPath: cfg.LoginApiPath,
+		err = viper.Unmarshal(&cfg)
+		if err != nil {
+			logger.Fatalf("Environment can't be loaded: %s", err)
 		}
 
 		if cfg.DiscordToken == "" {
 			panic("Discord token is required")
-		} else {
-			p.DiscordToken = cfg.DiscordToken
 		}
 
-		logger.Infof("Config: \n%s", prettyPrint(p))
+		logger.Infof("Config: \n%s", prettyPrint(cfg))
 	})
 
 	return cfg
