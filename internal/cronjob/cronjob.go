@@ -1,6 +1,8 @@
 package cronjob
 
 import (
+	"time"
+
 	"github.com/robfig/cron/v3"
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
@@ -14,22 +16,38 @@ type Cron struct {
 // Initialize cronjob add schedule jobs to cronjob
 func (cj *Cron) initialize() {
 	_, err := cj.c.AddFunc("30 7 * * *", func() {
-		err := cj.svc.DefaultSchedulePunchAllUsers()
-		if err != nil {
-			logger.Error(err)
+		now := time.Now()
+		weekday := now.Weekday().String()
+
+		if weekday == "Saturday" || weekday == "Sunday" {
+			logger.Infof("Today is %v, no need to punch", weekday)
+			return
+		} else {
+			err := cj.svc.DefaultSchedulePunchAllUsers()
+			if err != nil {
+				logger.Error(err)
+			}
+			logger.Info("All Users Punch Done")
 		}
-		logger.Info("All Users Punch Done")
 	})
 	if err != nil {
 		panic(err)
 	}
 
 	_, err = cj.c.AddFunc("0 18 * * *", func() {
-		err := cj.svc.DefaultSchedulePunchAllUsers()
-		if err != nil {
-			logger.Error(err)
+		now := time.Now()
+		weekday := now.Weekday().String()
+
+		if weekday == "Saturday" || weekday == "Sunday" {
+			logger.Infof("Today is %v, no need to punch", weekday)
+			return
+		} else {
+			err := cj.svc.DefaultSchedulePunchAllUsers()
+			if err != nil {
+				logger.Error(err)
+			}
+			logger.Info("All Users Punch Done")
 		}
-		logger.Info("All Users Punch Done")
 	})
 	if err != nil {
 		panic(err)

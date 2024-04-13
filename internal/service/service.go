@@ -119,14 +119,6 @@ func (s *Service) TryToLogin(account, password string) (string, error) {
 }
 
 func (s *Service) Punch(accessToken string) error {
-	now := time.Now()
-	weekday := now.Weekday().String()
-
-	if weekday == "Saturday" || weekday == "Sunday" {
-		logger.Infof("Today is %v, no need to punch", weekday)
-		return nil
-	}
-
 	req, err := http.NewRequest("POST", s.Cfg.Endpoint+s.Cfg.PunchApiPath, nil)
 	if err != nil {
 		return err
@@ -217,7 +209,7 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 			}
 
 			// notify user that punch is done with bot
-			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
+			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s schedule punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
 			if err != nil {
 				logger.Errorf("Error sending message: %s", err)
 			}
