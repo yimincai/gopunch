@@ -44,7 +44,7 @@ func (c *CommandRegister) Exec(ctx *bot.Context) (err error) {
 	}
 
 	user := &domain.User{
-		Nickname:      ctx.Message.Author.Username,
+		Name:          ctx.Message.Author.Username,
 		Account:       ctx.Args[0],
 		Password:      ctx.Args[1],
 		DiscordUserID: ctx.Message.Author.ID,

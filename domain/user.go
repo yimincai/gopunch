@@ -10,7 +10,7 @@ import (
 
 type User struct {
 	ID            string         `gorm:"primaryKey;type:varchar(100)" json:"-"`
-	Nickname      string         `gorm:"type:varchar(100)" json:"nickname"`
+	Name          string         `gorm:"type:varchar(100)" json:"name"`
 	Account       string         `gorm:"type:varchat(100);unique;index;not null" json:"account"`
 	Password      string         `gorm:"type:varchar(255);not null" json:"password"`
 	DiscordUserID string         `gorm:"type:varchar(255);not null" json:"discord_user_id"`

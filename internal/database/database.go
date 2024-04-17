@@ -60,7 +60,7 @@ func MigrateUserMissingData(db *gorm.DB, s *discordgo.Session) {
 	}
 
 	for _, user := range allUsers {
-		if user.Nickname == "" {
+		if user.Name == "" {
 			dUser, err := s.User(user.DiscordUserID)
 			if err != nil {
 				logger.Errorf("User %s not found in discord: %s", user.DiscordUserID, err)
@@ -73,7 +73,7 @@ func MigrateUserMissingData(db *gorm.DB, s *discordgo.Session) {
 				user.Role = enums.RoleType_Normal
 			}
 
-			user.Nickname = dUser.Username
+			user.Name = dUser.Username
 			db.Save(user)
 
 			logger.Infof("User %s updated as %s member", user.Account, user.Role)
