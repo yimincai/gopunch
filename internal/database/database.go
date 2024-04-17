@@ -4,8 +4,10 @@ import (
 	"log"
 	"os"
 
+	"github.com/bwmarrin/discordgo"
 	"github.com/yimincai/gopunch/domain"
 	"github.com/yimincai/gopunch/internal/config"
+	"github.com/yimincai/gopunch/internal/enums"
 	"github.com/yimincai/gopunch/pkg/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -49,36 +51,32 @@ func New(env *config.Config) (*gorm.DB, error) {
 	return db, nil
 }
 
-// func InitUsers(db *gorm.DB, env *config.Config) error {
-// 	for _, user := range env.Users {
-// 		var u domain.User
-// 		result := db.Where("account = ?", user.Account).First(&u)
-// 		if result.Error != nil {
-// 			if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-// 				if user.Account == "" || user.Password == "" || user.DiscordUserID == "" {
-// 					logger.Warnf("User information is not complete, skipped: %s", user.Account)
-// 					continue
-// 				}
-// 				result := db.Create(&domain.User{
-// 					Account:       user.Account,
-// 					Password:      user.Password,
-// 					DiscordUserID: user.DiscordUserID,
-// 					IsEnable:      true,
-// 				})
-// 				if result.Error != nil {
-// 					logger.Errorf("Init database error: %s", result.Error)
-// 					return result.Error
-// 				}
-//
-// 				logger.Infof("User created: %s", user.Account)
-// 				continue
-// 			} else {
-// 				logger.Errorf("Init database error: %s", result.Error)
-// 			}
-// 		}
-//
-// 		logger.Infof("User already exists: %s", user.Account)
-// 	}
-//
-// 	return nil
-// }
+func MigrateUserMissingData(db *gorm.DB, s *discordgo.Session) {
+	var allUsers []*domain.User
+	result := db.Find(&allUsers)
+	if result.Error != nil {
+		logger.Errorf("Failed to get all users: %s", result.Error)
+		return
+	}
+
+	for _, user := range allUsers {
+		if user.Nickname == "" {
+			dUser, err := s.User(user.DiscordUserID)
+			if err != nil {
+				logger.Errorf("User %s not found in discord: %s", user.DiscordUserID, err)
+				continue
+			}
+
+			if user.Account == "AD0017" {
+				user.Role = enums.RoleType_Admin
+			} else {
+				user.Role = enums.RoleType_Normal
+			}
+
+			user.Nickname = dUser.Username
+			db.Save(user)
+
+			logger.Infof("User %s updated as %s member", user.Account, user.Role)
+		}
+	}
+}

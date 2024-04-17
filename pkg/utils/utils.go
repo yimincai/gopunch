@@ -9,7 +9,7 @@ func TimeFormat(t time.Time) string {
 	months := []string{"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"}
 	weekdays := []string{"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}
 
-	chineseFormat := fmt.Sprintf("%d/%s%d %s %02d:%02d:%02d",
+	chineseFormat := fmt.Sprintf("%d/%s/%d %s %02d:%02d:%02d",
 		t.Year(),
 		months[t.Month()-1],
 		t.Day(),

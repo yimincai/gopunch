@@ -10,6 +10,7 @@ import (
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
 	"github.com/yimincai/gopunch/repository"
+	"gorm.io/gorm"
 )
 
 type Bot struct {
@@ -18,6 +19,7 @@ type Bot struct {
 	Repo    repository.Repository
 	Svc     service.Service
 	Cron    *cronjob.Cron
+	Db      *gorm.DB
 }
 
 func New() *Bot {
@@ -49,6 +51,7 @@ func New() *Bot {
 		Cfg:     cfg,
 		Repo:    repo,
 		Cron:    cronjob.New(logger.GetInstance(), s),
+		Db:      db,
 	}
 }
 
@@ -59,6 +62,8 @@ func (b *Bot) Run() {
 	if err != nil {
 		panic("Error opening connection to Discord: " + err.Error())
 	}
+
+	database.MigrateUserMissingData(b.Db, b.Session)
 
 	logger.Infof("Bot Login as %s, UserID: %s", b.Session.State.User.String(), b.Session.State.User.ID)
 	logger.Info("Bot is now running. Press CTRL-C to exit.")

@@ -4,6 +4,7 @@ import "errors"
 
 var (
 	ErrInternalError     = errors.New("internal error, please contact admin 👨‍💻")
+	ErrForbidden         = errors.New("forbidden, please contact admin 👨‍💻")
 	ErrSendingMessage    = errors.New("error while sending message, 👨‍💻")
 	ErrDayOffAlreadySet  = errors.New("day off already set 📅")
 	ErrPunchFailed       = errors.New("punch failed 🥊")
