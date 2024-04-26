@@ -13,6 +13,11 @@ type Repository interface {
 	DeleteUserByAccount(account string) error
 	SetDayOff(dayOff *domain.DayOff) error
 	FindUserDayOffByDate(userID string, year, month, date int) (*domain.DayOff, error)
+	FindAllSchedules() ([]*domain.Schedule, error)
+	FindScheduleByUserID(userID string) (*domain.Schedule, error)
+	CreateSchedule(schedule *domain.Schedule) error
+	UpdateSchedule(schedule *domain.Schedule) error
+	UpdateAccount(user *domain.User) error
 }
 
 type Repo struct {

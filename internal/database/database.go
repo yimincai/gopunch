@@ -37,14 +37,12 @@ func New(env *config.Config) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&domain.User{}, &domain.DayOff{})
+	err = db.AutoMigrate(&domain.User{}, &domain.DayOff{}, &domain.Schedule{})
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Info("Database connected")
-
-	// InitUsers(db, env)
 
 	return db, nil
 }

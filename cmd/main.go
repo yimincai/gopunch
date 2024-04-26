@@ -35,12 +35,12 @@ func main() {
 		logger.Info("Bot closed")
 	}()
 
-	server.Cron.Start()
-	defer func() {
-		server.Cron.Stop()
-		logger.Info("Cron stopped")
+	go func() {
+		server.Cron.Start()
+		// defer func() {
+		// 	server.Cron.Stop()
+		// }()
 	}()
-	logger.Info("Cron started")
 
 	// ============================== Graceful shutdown ==============================
 	// Wait for interrupt signal to gracefully shut down the server with a timeout.
@@ -67,7 +67,7 @@ func registerCommands(b *bot.Bot) {
 	cmdHandler := bot.NewCommandHandler(b.Cfg.Prefix)
 	cmdHandler.OnError = func(ctx *bot.Context, err error) {
 		logger.Errorf("Error executing command: %v", err)
-		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "⚠️ An error occurred while executing the command. \n❌ error: "+err.Error())
+		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "⚠️  An error occurred while executing the command. \n❌ error: "+err.Error())
 		if err != nil {
 			logger.Errorf("Error sending message: %v", err)
 		}
@@ -80,9 +80,11 @@ func registerCommands(b *bot.Bot) {
 	cmdHandler.RegisterCommand(&commands.CommandGetUsers{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandPunch{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandRegister{Svc: b.Svc})
-	cmdHandler.RegisterCommand(&commands.CommandForceRegister{Svc: b.Svc})
+	cmdHandler.RegisterCommand(&commands.CommandUpdateAccount{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandWhoAmI{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandDayOff{Svc: b.Svc})
+	cmdHandler.RegisterCommand(&commands.CommandSetSchedule{Svc: b.Svc})
+	cmdHandler.RegisterCommand(&commands.CommandPrintSchedule{Svc: b.Svc})
 
 	b.Session.AddHandler(cmdHandler.HandleMessage)
 }

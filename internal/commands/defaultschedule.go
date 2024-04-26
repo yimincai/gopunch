@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/yimincai/gopunch/internal/bot"
 	"github.com/yimincai/gopunch/internal/errs"
 	"github.com/yimincai/gopunch/internal/service"
@@ -22,16 +23,17 @@ func (c *CommandDefaultSchedule) Description() string {
 }
 
 func (c *CommandDefaultSchedule) Exec(ctx *bot.Context) (err error) {
+	t := table.NewWriter()
+	t.AppendHeader(table.Row{"Punch In", "Punch Out"})
+	t.AppendRow([]interface{}{"08:00", "18:00"})
+	t.SetStyle(table.StyleLight)
+
 	response := "```"
 	response += "系統會自動在需打卡的第一個時間前30分鐘內隨機打卡，並在需打卡的最後一個時間後30分鐘內隨機打卡。\n"
+	response += "六日不打卡！若有特殊需求，請使用 `SetSchedule` 指令設定。\n"
 	response += fmt.Sprintf("國定假日尚未實作，請自行使用 %sdayoff 指令調整。\n\n", c.Svc.Cfg.Prefix)
-	response += "Monday: 8:00 - 18:00\n"
-	response += "Tuesday: 8:00 - 18:00\n"
-	response += "Wednesday: 8:00 - 18:00\n"
-	response += "Thursday: 8:00 - 18:00\n"
-	response += "Friday: 8:00 - 18:00\n"
-	response += "Saturday: None\n"
-	response += "Sunday: None\n"
+	response += "Default Schedule:\n"
+	response += t.Render()
 	response += "```"
 
 	_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)

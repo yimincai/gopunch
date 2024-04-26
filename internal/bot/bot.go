@@ -4,8 +4,8 @@ import (
 	"os"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/robfig/cron/v3"
 	"github.com/yimincai/gopunch/internal/config"
-	"github.com/yimincai/gopunch/internal/cronjob"
 	"github.com/yimincai/gopunch/internal/database"
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
@@ -17,7 +17,7 @@ type Bot struct {
 	Cfg     *config.Config
 	Repo    repository.Repository
 	Svc     service.Service
-	Cron    *cronjob.Cron
+	Cron    *cron.Cron
 }
 
 func New() *Bot {
@@ -41,21 +41,28 @@ func New() *Bot {
 		logger.Panicf("Error creating Discord session: " + err.Error())
 	}
 
-	s := service.NewService(cfg, repo, session)
+	l := logger.GetInstance()
+	c := cron.New(cron.WithLogger(l), cron.WithChain(cron.Recover(l)))
+	s := service.NewService(cfg, repo, session, c)
 
 	return &Bot{
 		Session: session,
 		Svc:     s,
 		Cfg:     cfg,
 		Repo:    repo,
-		Cron:    cronjob.New(logger.GetInstance(), s),
+		Cron:    c,
 	}
 }
 
 func (b *Bot) Run() {
+	err := b.Svc.InitSchedules()
+	if err != nil {
+		logger.Panicf("Error scheduling: %v", err)
+	}
+
 	b.Session.Identify.Intents = discordgo.IntentDirectMessages
 
-	err := b.Session.Open()
+	err = b.Session.Open()
 	if err != nil {
 		panic("Error opening connection to Discord: " + err.Error())
 	}

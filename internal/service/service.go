@@ -11,8 +11,10 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/robfig/cron/v3"
 	"github.com/yimincai/gopunch/domain"
 	"github.com/yimincai/gopunch/internal/config"
+	"github.com/yimincai/gopunch/internal/enums"
 	"github.com/yimincai/gopunch/internal/errs"
 	"github.com/yimincai/gopunch/pkg/logger"
 	"github.com/yimincai/gopunch/pkg/utils"
@@ -26,10 +28,218 @@ type Service struct {
 	Session *discordgo.Session
 	Cfg     *config.Config
 	Repo    repository.Repository
+	Cron    *cron.Cron
 }
 
 func init() {
 	R = rand.New(rand.NewSource(time.Now().UnixNano()))
+}
+
+func (s *Service) InitSchedules() error {
+	err := s.initUsersSchedules()
+	if err != nil {
+		return err
+	}
+
+	err = s.initDefaultSchedules()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Service) initUsersSchedules() error {
+	// schedule all users punch from schedule table
+	schedules, err := s.Repo.FindAllSchedules()
+	if err != nil {
+		return err
+	}
+
+	if schedules == nil {
+		logger.Info("No users schedules found")
+		return nil
+	}
+
+	for _, schedule := range schedules {
+		// check if user is enabled
+		if !schedule.User.IsEnable {
+			logger.Infof("User %s is disabled, pass scheduling", schedule.User.Account)
+			continue
+		}
+
+		// check if user has day off
+		now := time.Now()
+		dayoff, err := s.Repo.FindUserDayOffByDate(schedule.UserID, now.Year(), utils.MonthToInt(now.Month()), now.Day())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// no day off record found, continue
+		} else if err != nil {
+			return err
+		}
+
+		if dayoff != nil {
+			logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", schedule.User.Account, dayoff.Year, dayoff.Month, dayoff.Date)
+			continue
+		}
+
+		err = s.AddSchedulePunch(schedule)
+		if err != nil {
+			logger.Error(err)
+			continue
+		}
+	}
+
+	logger.Info("All users schedules initialized")
+
+	return nil
+}
+
+func (s *Service) initDefaultSchedules() error {
+	// default schedule punch all users at 07:30 every workday
+	_, err := s.Cron.AddFunc("30 7 * * *", func() {
+		now := time.Now()
+		weekday := now.Weekday().String()
+
+		if weekday == "Saturday" || weekday == "Sunday" {
+			logger.Infof("Today is %v, don't need to punch", weekday)
+			return
+		} else {
+			err := s.DefaultSchedulePunchAllUsers()
+			if err != nil {
+				logger.Error(err)
+			}
+			logger.Info("All Users Punch Done")
+		}
+	})
+	if err != nil {
+		logger.Errorf("Error adding default schedule punch all users at 07:30 every workday: %s", err)
+	}
+
+	// default schedule punch for all users at 18:00 every workday
+	_, err = s.Cron.AddFunc("0 18 * * *", func() {
+		now := time.Now()
+		weekday := now.Weekday().String()
+
+		if weekday == "Saturday" || weekday == "Sunday" {
+			logger.Infof("Today is %v, don't need to punch", weekday)
+			return
+		} else {
+			err := s.DefaultSchedulePunchAllUsers()
+			if err != nil {
+				logger.Error(err)
+			}
+			logger.Info("All Users Punch Done")
+		}
+	})
+	if err != nil {
+		logger.Errorf("Error adding default schedule punch for all users at 18:00 every workday: %s", err)
+	}
+
+	return nil
+}
+
+func (s *Service) AddSchedulePunch(schedule *domain.Schedule) error {
+	// schedule punch in
+	expression := schedule.GetCronExpression()
+	pInEntryID, err := s.Cron.AddFunc(expression.PunchIn, func() {
+		randomDelay := s.RamdomDelayInThirtyMinutes()
+		logger.Debugf("User: %s punch out, random delay: %s", schedule.User.Account, randomDelay)
+		time.Sleep(randomDelay)
+		s.Punch(schedule.User.Account)
+	})
+	if err != nil {
+		logger.Errorf("Error adding schedule for user %s: %s", schedule.User.Account, err)
+		return err
+	}
+	domain.CronScheduledMap[schedule.GetCronEntryKey(enums.PunchType_In)] = pInEntryID
+
+	// schedule punch out
+	pOutEntryID, err := s.Cron.AddFunc(expression.PunchOut, func() {
+		randomDelay := s.RamdomDelayInThirtyMinutes()
+		logger.Debugf("User: %s punch out, random delay: %s", schedule.User.Account, randomDelay)
+		time.Sleep(randomDelay)
+		s.Punch(schedule.User.Account)
+	})
+	if err != nil {
+		logger.Errorf("Error adding schedule for user %s: %s", schedule.User.Account, err)
+		return err
+	}
+	domain.CronScheduledMap[schedule.GetCronEntryKey(enums.PunchType_Out)] = pOutEntryID
+
+	return nil
+}
+
+// remove old schedule
+func (s *Service) RemoveSchedulePunch(schedule *domain.Schedule) {
+	pInEntryID := schedule.GetCronEntry(enums.PunchType_In)
+	pOutEntryID := schedule.GetCronEntry(enums.PunchType_Out)
+
+	s.Cron.Remove(pInEntryID)
+	s.Cron.Remove(pOutEntryID)
+}
+
+func (s *Service) Punch(userID string) {
+	// check if user has day off
+	now := time.Now()
+	weekday := now.Weekday().String()
+
+	if weekday == "Saturday" || weekday == "Sunday" {
+		logger.Infof("Today is %v, don't need to punch", weekday)
+		return
+	}
+
+	user, err := s.Repo.GetUserByAccount(userID)
+	if err != nil {
+		logger.Errorf("Error finding user: %s", err)
+		return
+	}
+
+	dayoff, err := s.Repo.FindUserDayOffByDate(userID, now.Year(), utils.MonthToInt(now.Month()), now.Day())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// no day off record found, continue
+	} else if err != nil {
+		logger.Errorf("Error finding day off: %s", err)
+		return
+	}
+
+	if dayoff != nil {
+		logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", user.Account, dayoff.Year, dayoff.Month, dayoff.Date)
+		return
+	}
+
+	channel, err := s.Session.UserChannelCreate(user.DiscordUserID)
+	if err != nil {
+		logger.Errorf("Error creating user DM channel: %s", err)
+		return
+	}
+
+	accessToken, err := s.Login(user.DiscordUserID)
+	if err != nil {
+		// notify user that login is failed with bot
+		_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled login failed at %s", user.Account, utils.TimeFormat(time.Now())))
+		if err != nil {
+			logger.Errorf("Error sending message: %s", err)
+		}
+		logger.Errorf("Error while login user %s, schedule skipped: %s", user.Account, err)
+		return
+	}
+
+	err = s.WebPunch(accessToken)
+	if err != nil {
+		// notify user that punch is failed with bot
+		_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled punch failed at %s", user.Account, utils.TimeFormat(time.Now())))
+		if err != nil {
+			logger.Errorf("Error sending message: %s", err)
+		}
+		logger.Errorf("Error punching user %s: %s", user.Account, err)
+		return
+	}
+
+	// notify user that punch is done with bot
+	_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s scheduled punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
+	if err != nil {
+		logger.Errorf("Error sending message: %s", err)
+	}
 }
 
 func (s *Service) Login(discordUserID string) (string, error) {
@@ -118,7 +328,7 @@ func (s *Service) TryToLogin(account, password string) (string, error) {
 	return response.Result.AccessToken, nil
 }
 
-func (s *Service) Punch(accessToken string) error {
+func (s *Service) WebPunch(accessToken string) error {
 	req, err := http.NewRequest("POST", s.Cfg.Endpoint+s.Cfg.PunchApiPath, nil)
 	if err != nil {
 		return err
@@ -169,7 +379,22 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 
 			// check if user is enabled
 			if !u.IsEnable {
-				logger.Infof("User %s is disabled, no need to punch", u.Account)
+				logger.Infof("User %s is disabled, pass default scheduling", u.Account)
+				return
+			}
+
+			// check if user has scheduled punch
+			schedule, err := s.Repo.FindScheduleByUserID(u.ID)
+			if err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					// no schedule found, continue
+				} else {
+					logger.Errorf("Error finding schedule: %s", err)
+					return
+				}
+			}
+			if schedule != nil {
+				logger.Infof("User %s has scheduled punch, pass default scheduling", u.Account)
 				return
 			}
 
@@ -184,7 +409,7 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 			}
 
 			if dayoff != nil {
-				logger.Infof("User %s has day off on %d/%d/%d, no need to punch", u.Account, dayoff.Year, dayoff.Month, dayoff.Date)
+				logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", u.Account, dayoff.Year, dayoff.Month, dayoff.Date)
 				return
 			}
 
@@ -196,15 +421,21 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 				logger.Error(err)
 				return
 			}
-			err = s.Punch(accessToken)
-			if err != nil {
-				logger.Error(err)
-				return
-			}
 
 			channel, err := s.Session.UserChannelCreate(u.DiscordUserID)
 			if err != nil {
 				logger.Errorf("Error creating user DM channel: %s", err)
+				return
+			}
+
+			err = s.WebPunch(accessToken)
+			if err != nil {
+				// notify user that punch is failed with bot
+				_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s schedule punch failed at %s", user.Account, utils.TimeFormat(time.Now())))
+				if err != nil {
+					logger.Errorf("Error sending message: %s", err)
+				}
+				logger.Error(err)
 				return
 			}
 
@@ -244,10 +475,90 @@ func (s *Service) SetDayOff(discordUserID string, year, month, day int) error {
 	return s.Repo.SetDayOff(dayoff)
 }
 
-func NewService(cfg *config.Config, repo repository.Repository, session *discordgo.Session) Service {
+// func (s *Service) RunScheduler(userID string) error {
+// 	schedule, err := s.Repo.FindScheduleByUserID(userID)
+// 	if err != nil {
+// 		if errors.Is(err, gorm.ErrRecordNotFound) {
+// 			// no schedule found, continue
+// 		} else {
+// 			return err
+// 		}
+// 	}
+// 	// schedule punch
+// 	expression := schedule.GetCronExpression()
+// 	_, err = s.Cron.AddFunc(expression.PunchIn, func() {
+// 		now := time.Now()
+// 		weekday := now.Weekday().String()
+//
+// 		if weekday == "Saturday" || weekday == "Sunday" {
+// 			logger.Infof("Today is %v, don't need to punch", weekday)
+// 			return
+// 		}
+//
+// 		// check if user has day off
+// 		dayoff, err := s.Repo.FindUserDayOffByDate(schedule.UserID, now.Year(), utils.MonthToInt(now.Month()), now.Day())
+// 		if errors.Is(err, gorm.ErrRecordNotFound) {
+// 			// no day off record found, continue
+// 		} else if err != nil {
+// 			logger.Errorf("Error finding day off: %s", err)
+// 			return
+// 		}
+//
+// 		if dayoff != nil {
+// 			logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", schedule.User.Account, dayoff.Year, dayoff.Month, dayoff.Date)
+// 			return
+// 		}
+//
+// 		channel, err := s.Session.UserChannelCreate(schedule.User.DiscordUserID)
+// 		if err != nil {
+// 			logger.Errorf("Error creating user DM channel: %s", err)
+// 			return
+// 		}
+//
+// 		accessToken, err := s.Login(schedule.User.DiscordUserID)
+// 		if err != nil {
+// 			// notify user that login is failed with bot
+// 			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled login failed at %s", schedule.User.Account, utils.TimeFormat(time.Now())))
+// 			if err != nil {
+// 				logger.Errorf("Error sending message: %s", err)
+// 			}
+// 			logger.Errorf("Error while login user %s, schedule skipped: %s", schedule.User.Account, err)
+// 			return
+// 		}
+//
+// 		err = s.Punch(accessToken)
+// 		if err != nil {
+// 			// notify user that punch is failed with bot
+// 			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled punch failed at %s", schedule.User.Account, utils.TimeFormat(time.Now())))
+// 			if err != nil {
+// 				logger.Errorf("Error sending message: %s", err)
+// 			}
+// 			logger.Errorf("Error punching user %s: %s", schedule.User.Account, err)
+// 			return
+// 		}
+//
+// 		// notify user that punch is done with bot
+// 		_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s scheduled punched successfully at %s", schedule.User.Account, utils.TimeFormat(time.Now())))
+// 		if err != nil {
+// 			logger.Errorf("Error sending message: %s", err)
+// 		}
+// 	})
+// 	if err != nil {
+// 		return err
+// 	}
+//
+// 	return nil
+// }
+
+func (s *Service) RamdomDelayInThirtyMinutes() time.Duration {
+	return time.Duration(R.Intn(29))*time.Minute + time.Duration(R.Intn(60))*time.Second
+}
+
+func NewService(cfg *config.Config, repo repository.Repository, session *discordgo.Session, cron *cron.Cron) Service {
 	return Service{
 		Cfg:     cfg,
 		Repo:    repo,
 		Session: session,
+		Cron:    cron,
 	}
 }

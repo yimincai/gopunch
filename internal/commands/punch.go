@@ -38,7 +38,7 @@ func (c *CommandPunch) Exec(ctx *bot.Context) (err error) {
 		return errs.ErrLoginFailed
 	}
 
-	err = c.Svc.Punch(assessToken)
+	err = c.Svc.WebPunch(assessToken)
 	if err != nil {
 		return errs.ErrPunchFailed
 	}
