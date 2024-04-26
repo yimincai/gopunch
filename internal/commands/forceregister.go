@@ -44,6 +44,7 @@ func (c *CommandForceRegister) Exec(ctx *bot.Context) (err error) {
 
 	err = c.Svc.Repo.DeleteUserByAccount(existsUser.Account)
 	if err != nil {
+		errs.LogError(err)
 		return errs.ErrDeleteUserFailed
 	}
 

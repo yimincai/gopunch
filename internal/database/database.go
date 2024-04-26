@@ -4,10 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/bwmarrin/discordgo"
 	"github.com/yimincai/gopunch/domain"
 	"github.com/yimincai/gopunch/internal/config"
-	"github.com/yimincai/gopunch/internal/enums"
 	"github.com/yimincai/gopunch/pkg/logger"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -49,34 +47,4 @@ func New(env *config.Config) (*gorm.DB, error) {
 	// InitUsers(db, env)
 
 	return db, nil
-}
-
-func MigrateUserMissingData(db *gorm.DB, s *discordgo.Session) {
-	var allUsers []*domain.User
-	result := db.Find(&allUsers)
-	if result.Error != nil {
-		logger.Errorf("Failed to get all users: %s", result.Error)
-		return
-	}
-
-	for _, user := range allUsers {
-		if user.Name == "" {
-			dUser, err := s.User(user.DiscordUserID)
-			if err != nil {
-				logger.Errorf("User %s not found in discord: %s", user.DiscordUserID, err)
-				continue
-			}
-
-			if user.Account == "AD0017" {
-				user.Role = enums.RoleType_Admin
-			} else {
-				user.Role = enums.RoleType_Normal
-			}
-
-			user.Name = dUser.Username
-			db.Save(user)
-
-			logger.Infof("User %s updated as %s member", user.Account, user.Role)
-		}
-	}
 }

@@ -1,6 +1,10 @@
 package errs
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/yimincai/gopunch/pkg/logger"
+)
 
 var (
 	ErrInternalError     = errors.New("internal error, please contact admin 👨‍💻")
@@ -15,3 +19,9 @@ var (
 	ErrLoginVerifyFailed = errors.New("login verify failed 😦, please check your account and password 🤔")
 	ErrLoginFailed       = errors.New("login failed 😦, please check your account and password and force register again 🤔")
 )
+
+func LogError(err error) {
+	if err != nil {
+		logger.Error(err)
+	}
+}

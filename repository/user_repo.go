@@ -1,9 +1,6 @@
 package repository
 
 import (
-	"strconv"
-	"time"
-
 	"github.com/yimincai/gopunch/domain"
 	"github.com/yimincai/gopunch/internal/errs"
 )
@@ -50,16 +47,8 @@ func (r *Repo) GetUsers() ([]*domain.User, error) {
 
 // DeleteUserByAccount implements Repository.
 func (r *Repo) DeleteUserByAccount(account string) error {
-	var user domain.User
-	if err := r.Db.Where("account = ?", account).Delete(&user).Error; err != nil {
+	if err := r.Db.Where("account = ?", account).Delete(&domain.User{}).Error; err != nil {
 		return errs.ErrUserNotFound
-	}
-
-	// update user's account to let it be unique
-	now := time.Now().Unix()
-	dummy := account + "_deleted_" + strconv.FormatInt(now, 10)
-	if err := r.Db.Unscoped().Where("account = ?", account).Update("account", dummy).Error; err != nil {
-		return err
 	}
 
 	return nil
