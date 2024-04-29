@@ -6,12 +6,12 @@ import (
 )
 
 // CreateUser implements Repository.
-func (r *Repo) CreateUser(user *domain.User) error {
+func (r *Repo) CreateUser(user *domain.User) (*domain.User, error) {
 	if err := r.Db.Create(user).Error; err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return user, nil
 }
 
 // GetUserByAccount implements Repository.

@@ -44,11 +44,11 @@ func (c *CommandGetUsers) Exec(ctx *bot.Context) (err error) {
 
 	// a table of users
 	t := table.NewWriter()
-	t.AppendHeader(table.Row{"Name", "Account", "Role", "Is_Enable"})
+	t.AppendHeader(table.Row{"ID", "Name", "Account", "Role", "Is_Enable"})
 
 	var response string
 	for _, user := range users {
-		t.AppendRow([]interface{}{user.Name, user.Account, user.Role, user.IsEnable})
+		t.AppendRow([]interface{}{user.ID, user.Name, user.Account, user.Role, user.IsEnable})
 	}
 
 	t.SetStyle(table.StyleLight)

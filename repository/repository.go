@@ -6,7 +6,7 @@ import (
 )
 
 type Repository interface {
-	CreateUser(user *domain.User) error
+	CreateUser(user *domain.User) (*domain.User, error)
 	GetUsers() ([]*domain.User, error)
 	GetUserByAccount(account string) (*domain.User, error)
 	GetUserByDiscordUserID(discordUserID string) (*domain.User, error)
@@ -15,8 +15,8 @@ type Repository interface {
 	FindUserDayOffByDate(userID string, year, month, date int) (*domain.DayOff, error)
 	FindAllSchedules() ([]*domain.Schedule, error)
 	FindScheduleByUserID(userID string) (*domain.Schedule, error)
-	CreateSchedule(schedule *domain.Schedule) error
-	UpdateSchedule(schedule *domain.Schedule) error
+	CreateSchedule(schedule *domain.Schedule) (*domain.Schedule, error)
+	UpdateSchedule(schedule *domain.Schedule) (*domain.Schedule, error)
 	UpdateAccount(user *domain.User) error
 }
 

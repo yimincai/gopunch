@@ -21,12 +21,12 @@ func (r *Repo) FindAllSchedules() ([]*domain.Schedule, error) {
 }
 
 // CreateSchedule implements Repository.
-func (r *Repo) CreateSchedule(schedule *domain.Schedule) error {
+func (r *Repo) CreateSchedule(schedule *domain.Schedule) (*domain.Schedule, error) {
 	if err := r.Db.Create(schedule).Error; err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return schedule, nil
 }
 
 // FindScheduleByUserID implements Repository.
@@ -41,10 +41,10 @@ func (r *Repo) FindScheduleByUserID(userID string) (*domain.Schedule, error) {
 }
 
 // UpdateSchedule implements Repository.
-func (r *Repo) UpdateSchedule(schedule *domain.Schedule) error {
+func (r *Repo) UpdateSchedule(schedule *domain.Schedule) (*domain.Schedule, error) {
 	if err := r.Db.Save(schedule).Error; err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return schedule, nil
 }

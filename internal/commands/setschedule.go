@@ -77,13 +77,12 @@ func (c *CommandSetSchedule) Exec(ctx *bot.Context) (err error) {
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// create a new schedule
-			schedule = &domain.Schedule{
+			schedule, err = c.Svc.Repo.CreateSchedule(&domain.Schedule{
 				PunchIn:  ctx.Args[0],
 				PunchOut: ctx.Args[1],
 				UserID:   user.ID,
-			}
+			})
 
-			err = c.Svc.Repo.CreateSchedule(schedule)
 			if err != nil {
 				return errs.ErrInternalError
 			}
@@ -119,7 +118,7 @@ func (c *CommandSetSchedule) Exec(ctx *bot.Context) (err error) {
 	schedule.PunchIn = ctx.Args[0]
 	schedule.PunchOut = ctx.Args[1]
 
-	err = c.Svc.Repo.UpdateSchedule(schedule)
+	schedule, err = c.Svc.Repo.UpdateSchedule(schedule)
 	if err != nil {
 		return errs.ErrInternalError
 	}

@@ -452,7 +452,12 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 }
 
 func (s *Service) Register(user *domain.User) error {
-	return s.Repo.CreateUser(user)
+	_, err := s.Repo.CreateUser(user)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *Service) SetDayOff(discordUserID string, year, month, day int) error {
