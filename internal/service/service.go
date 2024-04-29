@@ -356,6 +356,10 @@ func (s *Service) WebPunch(accessToken string) error {
 		return err
 	}
 
+	if !response.Result.IsSuccess {
+		return errs.ErrPunchFailed
+	}
+
 	return nil
 }
 
@@ -480,80 +484,52 @@ func (s *Service) SetDayOff(discordUserID string, year, month, day int) error {
 	return s.Repo.SetDayOff(dayoff)
 }
 
-// func (s *Service) RunScheduler(userID string) error {
-// 	schedule, err := s.Repo.FindScheduleByUserID(userID)
-// 	if err != nil {
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			// no schedule found, continue
-// 		} else {
-// 			return err
-// 		}
-// 	}
-// 	// schedule punch
-// 	expression := schedule.GetCronExpression()
-// 	_, err = s.Cron.AddFunc(expression.PunchIn, func() {
-// 		now := time.Now()
-// 		weekday := now.Weekday().String()
-//
-// 		if weekday == "Saturday" || weekday == "Sunday" {
-// 			logger.Infof("Today is %v, don't need to punch", weekday)
-// 			return
-// 		}
-//
-// 		// check if user has day off
-// 		dayoff, err := s.Repo.FindUserDayOffByDate(schedule.UserID, now.Year(), utils.MonthToInt(now.Month()), now.Day())
-// 		if errors.Is(err, gorm.ErrRecordNotFound) {
-// 			// no day off record found, continue
-// 		} else if err != nil {
-// 			logger.Errorf("Error finding day off: %s", err)
-// 			return
-// 		}
-//
-// 		if dayoff != nil {
-// 			logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", schedule.User.Account, dayoff.Year, dayoff.Month, dayoff.Date)
-// 			return
-// 		}
-//
-// 		channel, err := s.Session.UserChannelCreate(schedule.User.DiscordUserID)
-// 		if err != nil {
-// 			logger.Errorf("Error creating user DM channel: %s", err)
-// 			return
-// 		}
-//
-// 		accessToken, err := s.Login(schedule.User.DiscordUserID)
-// 		if err != nil {
-// 			// notify user that login is failed with bot
-// 			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled login failed at %s", schedule.User.Account, utils.TimeFormat(time.Now())))
-// 			if err != nil {
-// 				logger.Errorf("Error sending message: %s", err)
-// 			}
-// 			logger.Errorf("Error while login user %s, schedule skipped: %s", schedule.User.Account, err)
-// 			return
-// 		}
-//
-// 		err = s.Punch(accessToken)
-// 		if err != nil {
-// 			// notify user that punch is failed with bot
-// 			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled punch failed at %s", schedule.User.Account, utils.TimeFormat(time.Now())))
-// 			if err != nil {
-// 				logger.Errorf("Error sending message: %s", err)
-// 			}
-// 			logger.Errorf("Error punching user %s: %s", schedule.User.Account, err)
-// 			return
-// 		}
-//
-// 		// notify user that punch is done with bot
-// 		_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s scheduled punched successfully at %s", schedule.User.Account, utils.TimeFormat(time.Now())))
-// 		if err != nil {
-// 			logger.Errorf("Error sending message: %s", err)
-// 		}
-// 	})
-// 	if err != nil {
-// 		return err
-// 	}
-//
-// 	return nil
-// }
+func (s *Service) PunchOnTime(accessToken string, punchTime time.Time) error {
+	type payload struct {
+		Timestamp string `json:"timestamp"`
+	}
+
+	var p payload
+	p.Timestamp = punchTime.Format("2006/01/02 15:04:05")
+
+	body, err := json.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", s.Cfg.Endpoint+s.Cfg.PunchApiPath, bytes.NewBuffer(body))
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Authorization", "Bearer "+accessToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return errs.ErrPunchFailed
+	}
+
+	var response domain.PunchResponse
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		logger.Error(err)
+		return err
+	}
+
+	if !response.Result.IsSuccess {
+		return errs.ErrPunchFailed
+	}
+
+	return nil
+}
 
 func (s *Service) RamdomDelayInThirtyMinutes() time.Duration {
 	return time.Duration(R.Intn(29))*time.Minute + time.Duration(R.Intn(60))*time.Second

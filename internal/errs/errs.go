@@ -18,6 +18,7 @@ var (
 	ErrDeleteUserFailed  = errors.New("delete user failed 😣, please contact admin 👨‍💻")
 	ErrLoginVerifyFailed = errors.New("login verify failed 😦, please check your account and password 🤔")
 	ErrLoginFailed       = errors.New("login failed 😦, please check your account and password and force register again 🤔")
+	ErrPunchOnTimeFailed = errors.New("punch on time failed 🕰️")
 )
 
 func LogError(err error) {
