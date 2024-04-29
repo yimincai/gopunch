@@ -2,14 +2,13 @@ package repository
 
 import (
 	"github.com/yimincai/gopunch/domain"
-	"gorm.io/gorm/clause"
 )
 
 // FindAllSchedules implements Repository.
 func (r *Repo) FindAllSchedules() ([]*domain.Schedule, error) {
 	var schedules []*domain.Schedule
 
-	if err := r.Db.Preload(clause.Associations).Find(&schedules).Error; err != nil {
+	if err := r.Db.Preload("User").Find(&schedules).Error; err != nil {
 		return nil, err
 	}
 
@@ -33,7 +32,7 @@ func (r *Repo) CreateSchedule(schedule *domain.Schedule) (*domain.Schedule, erro
 func (r *Repo) FindScheduleByUserID(userID string) (*domain.Schedule, error) {
 	var schedule *domain.Schedule
 
-	if err := r.Db.Preload(clause.Associations).Where("user_id = ?", userID).First(&schedule).Error; err != nil {
+	if err := r.Db.Preload("User").Where("user_id = ?", userID).First(&schedule).Error; err != nil {
 		return nil, err
 	}
 

@@ -32,7 +32,7 @@ type Schedule struct {
 
 	// belongs to user
 	UserID string `gorm:"type:varchar(100);not null" json:"user_id"`
-	User   User   `json:"user"`
+	User   User   `json:"-"`
 }
 
 type Expression struct {
