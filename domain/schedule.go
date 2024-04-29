@@ -23,12 +23,12 @@ func init() {
 }
 
 type Schedule struct {
-	ID        string    `gorm:"primaryKey;type:varchar(100)" json:"-"`
-	PunchIn   string    `gorm:"embedded" json:"punch_in"`
-	PunchOut  string    `gorm:"embedded" json:"punch_out"`
-	CreatedAt time.Time `json:"-"`
-	UpdatedAt time.Time `json:"-"`
-	DeletedAt time.Time `json:"-"`
+	ID        string         `gorm:"primaryKey;type:varchar(100)" json:"-"`
+	PunchIn   string         `gorm:"embedded" json:"punch_in"`
+	PunchOut  string         `gorm:"embedded" json:"punch_out"`
+	CreatedAt time.Time      `json:"-"`
+	UpdatedAt time.Time      `json:"-"`
+	DeletedAt gorm.DeletedAt `json:"-"`
 
 	// belongs to user
 	UserID string `gorm:"type:varchar(100);not null" json:"user_id"`
