@@ -61,6 +61,8 @@ func (s *Service) initUsersSchedules() error {
 		return nil
 	}
 
+	logger.Infof("Found %d users schedules", len(schedules))
+
 	for _, schedule := range schedules {
 		// check if user is enabled
 		if !schedule.User.IsEnable {
@@ -68,28 +70,15 @@ func (s *Service) initUsersSchedules() error {
 			continue
 		}
 
-		// check if user has day off
-		now := time.Now()
-		dayoff, err := s.Repo.FindUserDayOffByDate(schedule.UserID, now.Year(), utils.MonthToInt(now.Month()), now.Day())
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			// no day off record found, continue
-		} else if err != nil {
-			return err
-		}
-
-		if dayoff != nil {
-			logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", schedule.User.Account, dayoff.Year, dayoff.Month, dayoff.Date)
-			continue
-		}
-
 		err = s.AddSchedulePunch(schedule)
 		if err != nil {
 			logger.Error(err)
-			continue
 		}
+
+		logger.Infof("User %s schedule initialized", schedule.User.Account)
 	}
 
-	logger.Info("All users schedules initialized")
+	logger.Info("Users schedules initialized")
 
 	return nil
 }
@@ -135,10 +124,25 @@ func (s *Service) initDefaultSchedules() error {
 		logger.Errorf("Error adding default schedule punch for all users at 18:00 every workday: %s", err)
 	}
 
+	logger.Info("Default schedules initialized")
+
 	return nil
 }
 
 func (s *Service) AddSchedulePunch(schedule *domain.Schedule) error {
+	// check if user has day off
+	now := time.Now()
+	dayoff, err := s.Repo.FindUserDayOffByDate(schedule.UserID, now.Year(), utils.MonthToInt(now.Month()), now.Day())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// no day off record found, continue
+	} else if err != nil {
+		return err
+	}
+
+	if dayoff != nil {
+		logger.Infof("User %s has day off on %d/%d/%d, don't need to punch", schedule.User.Account, dayoff.Year, dayoff.Month, dayoff.Date)
+		return nil
+	}
 	// schedule punch in
 	expression := schedule.GetCronExpression()
 	pInEntryID, err := s.Cron.AddFunc(expression.PunchIn, func() {

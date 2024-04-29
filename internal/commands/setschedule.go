@@ -37,7 +37,7 @@ func (c *CommandSetSchedule) Exec(ctx *bot.Context) (err error) {
 	}
 
 	// validate the time format
-	_, err = time.Parse("15:04", ctx.Args[0])
+	stime, err := time.Parse("15:04", ctx.Args[0])
 	if err != nil {
 		response := "❌ Invalid start time format, please use `HH:MM` in 24-hour format"
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
@@ -47,7 +47,7 @@ func (c *CommandSetSchedule) Exec(ctx *bot.Context) (err error) {
 		return
 	}
 
-	_, err = time.Parse("15:04", ctx.Args[1])
+	etime, err := time.Parse("15:04", ctx.Args[1])
 	if err != nil {
 		response := "❌ Invalid start time format, please use `HH:MM` in 24-hour format"
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
@@ -78,8 +78,8 @@ func (c *CommandSetSchedule) Exec(ctx *bot.Context) (err error) {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			// create a new schedule
 			schedule, err = c.Svc.Repo.CreateSchedule(&domain.Schedule{
-				PunchIn:  ctx.Args[0],
-				PunchOut: ctx.Args[1],
+				PunchIn:  stime.Format("15:04"),
+				PunchOut: etime.Format("15:04"),
 				UserID:   user.ID,
 			})
 
@@ -111,14 +111,20 @@ func (c *CommandSetSchedule) Exec(ctx *bot.Context) (err error) {
 		}
 	}
 
-	// remove old schedule
+	// remove the schedule from the cron job
 	c.Svc.RemoveSchedulePunch(schedule)
 
 	// update the schedule
-	schedule.PunchIn = ctx.Args[0]
-	schedule.PunchOut = ctx.Args[1]
+	schedule.PunchIn = stime.Format("15:04")
+	schedule.PunchOut = etime.Format("15:04")
 
-	schedule, err = c.Svc.Repo.UpdateSchedule(schedule)
+	schedule, err = c.Svc.Repo.UpdateSchedule(&domain.Schedule{
+		ID:       schedule.ID,
+		PunchIn:  stime.Format("15:04"),
+		PunchOut: etime.Format("15:04"),
+		UserID:   schedule.UserID,
+		User:     domain.User{},
+	})
 	if err != nil {
 		return errs.ErrInternalError
 	}

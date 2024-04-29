@@ -56,7 +56,7 @@ func (r *Repo) DeleteUserByAccount(account string) error {
 
 // UpdateAccount implements Repository.
 func (r *Repo) UpdateAccount(user *domain.User) error {
-	if err := r.Db.Save(user).Error; err != nil {
+	if err := r.Db.Updates(user).Error; err != nil {
 		return err
 	}
 

@@ -41,7 +41,7 @@ func (r *Repo) FindScheduleByUserID(userID string) (*domain.Schedule, error) {
 
 // UpdateSchedule implements Repository.
 func (r *Repo) UpdateSchedule(schedule *domain.Schedule) (*domain.Schedule, error) {
-	if err := r.Db.Save(schedule).Error; err != nil {
+	if err := r.Db.Updates(schedule).Error; err != nil {
 		return nil, err
 	}
 
