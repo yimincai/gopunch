@@ -149,7 +149,7 @@ func (s *Service) AddSchedulePunch(schedule *domain.Schedule) error {
 		randomDelay := s.RamdomDelayInThirtyMinutes()
 		logger.Debugf("User: %s punch out, random delay: %s", schedule.User.Account, randomDelay)
 		time.Sleep(randomDelay)
-		s.Punch(schedule.User.Account)
+		s.Punch(schedule.UserID)
 	})
 	if err != nil {
 		logger.Errorf("Error adding schedule for user %s: %s", schedule.User.Account, err)
@@ -162,7 +162,7 @@ func (s *Service) AddSchedulePunch(schedule *domain.Schedule) error {
 		randomDelay := s.RamdomDelayInThirtyMinutes()
 		logger.Debugf("User: %s punch out, random delay: %s", schedule.User.Account, randomDelay)
 		time.Sleep(randomDelay)
-		s.Punch(schedule.User.Account)
+		s.Punch(schedule.UserID)
 	})
 	if err != nil {
 		logger.Errorf("Error adding schedule for user %s: %s", schedule.User.Account, err)
