@@ -85,6 +85,7 @@ func registerCommands(b *bot.Bot) {
 	cmdHandler.RegisterCommand(&commands.CommandDayOff{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandSetSchedule{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandPrintSchedule{Svc: b.Svc})
+	cmdHandler.RegisterCommand(&commands.CommandPunchOnTime{Svc: b.Svc})
 
 	b.Session.AddHandler(cmdHandler.HandleMessage)
 }
