@@ -13,6 +13,10 @@ type CommandHealth struct {
 	Svc service.Service
 }
 
+func (c *CommandHealth) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandHealth) Invokes() []string {
 	return []string{"Health", "health"}
 }

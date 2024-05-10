@@ -11,6 +11,10 @@ type CommandHelp struct {
 	Cfg *config.Config
 }
 
+func (c *CommandHelp) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandHelp) Invokes() []string {
 	return []string{"Help", "h", "help"}
 }

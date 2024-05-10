@@ -15,6 +15,10 @@ type CommandUpdateAccount struct {
 	Svc service.Service
 }
 
+func (c *CommandUpdateAccount) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandUpdateAccount) Invokes() []string {
 	return []string{"UpdateAccount", "ua", "updateaccount", "updateAccount"}
 }

@@ -14,6 +14,10 @@ type CommandRegister struct {
 	Svc service.Service
 }
 
+func (c *CommandRegister) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandRegister) Invokes() []string {
 	return []string{"Register", "register", "rg", "r"}
 }

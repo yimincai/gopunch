@@ -17,6 +17,10 @@ type CommandPunchOnTime struct {
 	Svc service.Service
 }
 
+func (c *CommandPunchOnTime) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandPunchOnTime) Invokes() []string {
 	return []string{"PunchOnTime", "pot", "punchontime", "punchOnTime"}
 }

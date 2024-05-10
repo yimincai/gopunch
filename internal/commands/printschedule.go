@@ -16,6 +16,10 @@ type CommandPrintSchedule struct {
 	Svc service.Service
 }
 
+func (c *CommandPrintSchedule) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandPrintSchedule) Invokes() []string {
 	return []string{"PrintSchedule", "ps", "printschedule", "printSchedule"}
 }

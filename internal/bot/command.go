@@ -7,4 +7,6 @@ type Command interface {
 	Description() string
 	// Exec executes the command.
 	Exec(ctx *Context) error
+	// Is required admin permission to execute the command.
+	IsAdminRequired() bool
 }

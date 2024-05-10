@@ -15,6 +15,10 @@ type CommandPunch struct {
 	Svc service.Service
 }
 
+func (c *CommandPunch) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandPunch) Invokes() []string {
 	return []string{"Punch", "punch", "p"}
 }

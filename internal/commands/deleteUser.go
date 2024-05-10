@@ -5,6 +5,9 @@ package commands
 // 	Repo repository.Repository
 // }
 //
+// func (c *CommandDeleteUser) IsAdminRequired() bool {
+// 	return false
+// }
 // func (c *CommandDeleteUser) Invokes() []string {
 // 	return []string{"Ping"}
 // }

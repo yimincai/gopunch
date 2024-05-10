@@ -18,6 +18,10 @@ type CommandSetSchedule struct {
 	Svc service.Service
 }
 
+func (c *CommandSetSchedule) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandSetSchedule) Invokes() []string {
 	return []string{"SetSchedule", "ss", "setschedule", "setSchedule"}
 }

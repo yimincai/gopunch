@@ -18,6 +18,10 @@ type CommandDayOff struct {
 	Svc service.Service
 }
 
+func (c *CommandDayOff) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandDayOff) Invokes() []string {
 	return []string{"DayOff", "dayoff", "dayOff"}
 }

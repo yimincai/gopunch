@@ -14,6 +14,10 @@ type CommandDefaultSchedule struct {
 	Svc service.Service
 }
 
+func (c *CommandDefaultSchedule) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandDefaultSchedule) Invokes() []string {
 	return []string{"DefaultSchedule", "ds", "defaultschedule", "defaultSchedule"}
 }

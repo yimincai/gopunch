@@ -10,6 +10,7 @@ import (
 	"github.com/yimincai/gopunch/internal/bot"
 	"github.com/yimincai/gopunch/internal/commands"
 	"github.com/yimincai/gopunch/internal/events"
+	"github.com/yimincai/gopunch/internal/middlewares"
 	"github.com/yimincai/gopunch/pkg/logger"
 )
 
@@ -86,6 +87,8 @@ func registerCommands(b *bot.Bot) {
 	cmdHandler.RegisterCommand(&commands.CommandSetSchedule{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandPrintSchedule{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandPunchOnTime{Svc: b.Svc})
+
+	cmdHandler.RegisterMiddleware(middlewares.NewRequiredAdminPermission(b.Repo))
 
 	b.Session.AddHandler(cmdHandler.HandleMessage)
 }

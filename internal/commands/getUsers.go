@@ -4,7 +4,6 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/yimincai/gopunch/domain"
 	"github.com/yimincai/gopunch/internal/bot"
-	"github.com/yimincai/gopunch/internal/enums"
 	"github.com/yimincai/gopunch/internal/errs"
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
@@ -12,6 +11,10 @@ import (
 
 type CommandGetUsers struct {
 	Svc service.Service
+}
+
+func (c *CommandGetUsers) IsAdminRequired() bool {
+	return true
 }
 
 func (c *CommandGetUsers) Invokes() []string {
@@ -23,19 +26,6 @@ func (c *CommandGetUsers) Description() string {
 }
 
 func (c *CommandGetUsers) Exec(ctx *bot.Context) (err error) {
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
-	if err != nil {
-		return errs.ErrUserNotFound
-	}
-
-	if !user.IsEnable {
-		return errs.ErrUserNotEnabled
-	}
-
-	if user.Role != enums.RoleType_Admin {
-		return errs.ErrForbidden
-	}
-
 	var users []*domain.User
 	users, err = c.Svc.Repo.GetUsers()
 	if err != nil {

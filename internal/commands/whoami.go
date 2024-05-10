@@ -15,6 +15,10 @@ type CommandWhoAmI struct {
 	Svc service.Service
 }
 
+func (c *CommandWhoAmI) IsAdminRequired() bool {
+	return false
+}
+
 func (c *CommandWhoAmI) Invokes() []string {
 	return []string{"WhoAmI", "whoami", "whoAmI", "w"}
 }
