@@ -87,6 +87,7 @@ func registerCommands(b *bot.Bot) {
 	cmdHandler.RegisterCommand(&commands.CommandSetSchedule{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandPrintSchedule{Svc: b.Svc})
 	cmdHandler.RegisterCommand(&commands.CommandPunchOnTime{Svc: b.Svc})
+	cmdHandler.RegisterCommand(&commands.CommandPunchUserOnTime{Svc: b.Svc})
 
 	cmdHandler.RegisterMiddleware(middlewares.NewRequiredAdminPermission(b.Repo))
 

@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -10,35 +9,38 @@ import (
 	"github.com/yimincai/gopunch/internal/service"
 	"github.com/yimincai/gopunch/pkg/logger"
 	"github.com/yimincai/gopunch/pkg/utils"
-	"gorm.io/gorm"
 )
 
-type CommandPunchOnTime struct {
+type CommandPunchUserOnTime struct {
 	Svc service.Service
 }
 
-func (c *CommandPunchOnTime) IsAdminRequired() bool {
-	return false
+func (c *CommandPunchUserOnTime) IsAdminRequired() bool {
+	return true
 }
 
-func (c *CommandPunchOnTime) Invokes() []string {
-	return []string{"PunchOnTime", "pot", "punchontime", "punchOnTime"}
+func (c *CommandPunchUserOnTime) Invokes() []string {
+	return []string{"PunchUserOnTime", "punchuserontime", "puot"}
 }
 
-func (c *CommandPunchOnTime) Description() string {
-	return "Punch on given time"
+func (c *CommandPunchUserOnTime) Description() string {
+	return "Punch user on given time"
 }
 
-func (c *CommandPunchOnTime) Exec(ctx *bot.Context) (err error) {
-	if len(ctx.Args) != 2 {
-		usage := fmt.Sprintf("Usage: %sPunchOnTime <time>, format: YYYY/MM/DD HH:MM:SS", c.Svc.Cfg.Prefix)
+func (c *CommandPunchUserOnTime) Exec(ctx *bot.Context) (err error) {
+	if len(ctx.Args) != 3 {
+		usage := "Usage: %sPunchUserOnTime <Account> <time>, format: YYYY/MM/DD HH:MM:SS"
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, usage)
 		if err != nil {
 			return errs.ErrSendingMessage
 		}
 	}
 
-	t, err := time.Parse("2006/01/02 15:04:05 ", ctx.Args[0]+" "+ctx.Args[1])
+	account := ctx.Args[0]
+	inputDate := ctx.Args[1]
+	inputTime := ctx.Args[2]
+
+	t, err := time.Parse("2006/01/02 15:04:05 ", inputDate+" "+inputTime)
 	if err != nil {
 		response := "❌ Invalid time format, please use `YYYY/MM/DD HH:MM:SS`"
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
@@ -48,22 +50,13 @@ func (c *CommandPunchOnTime) Exec(ctx *bot.Context) (err error) {
 		return
 	}
 
-	// check if the user is already registered
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	// find account user
+	user, err := c.Svc.Repo.GetUserByAccount(account)
 	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			response := fmt.Sprintf("You are not registered yet, please register first using `%sRegister <account> <password>`", c.Svc.Cfg.Prefix)
-			_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)
-			if err != nil {
-				return errs.ErrSendingMessage
-			}
-			return
-		} else {
-			return errs.ErrInternalError
-		}
+		return errs.ErrUserNotFound
 	}
 
-	accessToken, err := c.Svc.Login(ctx.Message.Author.ID)
+	accessToken, err := c.Svc.Login(user.DiscordUserID)
 	if err != nil {
 		logger.Error(err)
 		return

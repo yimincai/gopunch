@@ -4,7 +4,6 @@ import (
 	"github.com/yimincai/gopunch/internal/bot"
 	"github.com/yimincai/gopunch/internal/enums"
 	"github.com/yimincai/gopunch/internal/errs"
-	"github.com/yimincai/gopunch/pkg/logger"
 	"github.com/yimincai/gopunch/repository"
 )
 
@@ -13,7 +12,6 @@ type RequiredAdminPermission struct {
 }
 
 func (a *RequiredAdminPermission) Exec(ctx *bot.Context, cmd bot.Command) (next bool, err error) {
-	logger.Debugf("RequiredAdminPermission Exec")
 	if !cmd.IsAdminRequired() {
 		return true, nil
 	}
