@@ -50,7 +50,7 @@ func (c *CommandDayOff) Exec(ctx *bot.Context) (err error) {
 		return
 	}
 
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	user, err := c.Svc.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		return errs.ErrUserNotFound
 	}

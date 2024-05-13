@@ -51,7 +51,7 @@ func (c *CommandPunchUserOnTime) Exec(ctx *bot.Context) (err error) {
 	}
 
 	// find account user
-	user, err := c.Svc.Repo.GetUserByAccount(account)
+	user, err := c.Svc.Repo.FindUserByAccount(account)
 	if err != nil {
 		return errs.ErrUserNotFound
 	}

@@ -7,9 +7,10 @@ import (
 
 type Repository interface {
 	CreateUser(user *domain.User) (*domain.User, error)
-	GetUsers() ([]*domain.User, error)
-	GetUserByAccount(account string) (*domain.User, error)
-	GetUserByDiscordUserID(discordUserID string) (*domain.User, error)
+	FindUsers() ([]*domain.User, error)
+	FindUserByAccount(account string) (*domain.User, error)
+	FindUserByDiscordUserID(discordUserID string) (*domain.User, error)
+	FindUserByID(userID string) (*domain.User, error)
 	DeleteUserByAccount(account string) error
 	SetDayOff(dayOff *domain.DayOff) error
 	FindUserDayOffByDate(userID string, year, month, date int) (*domain.DayOff, error)

@@ -192,9 +192,9 @@ func (s *Service) Punch(userID string) {
 		return
 	}
 
-	user, err := s.Repo.GetUserByAccount(userID)
+	user, err := s.Repo.FindUserByID(userID)
 	if err != nil {
-		logger.Errorf("Error finding user: %s", err)
+		logger.Errorf("Error finding user %s: %s", userID, err)
 		return
 	}
 
@@ -247,7 +247,7 @@ func (s *Service) Punch(userID string) {
 }
 
 func (s *Service) Login(discordUserID string) (string, error) {
-	user, err := s.Repo.GetUserByDiscordUserID(discordUserID)
+	user, err := s.Repo.FindUserByDiscordUserID(discordUserID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return "", errs.ErrUserNotFound
@@ -369,7 +369,7 @@ func (s *Service) WebPunch(accessToken string) error {
 
 func (s *Service) DefaultSchedulePunchAllUsers() error {
 	var users []*domain.User
-	users, err := s.Repo.GetUsers()
+	users, err := s.Repo.FindUsers()
 	if err != nil {
 		return err
 	}
@@ -469,7 +469,7 @@ func (s *Service) Register(user *domain.User) error {
 }
 
 func (s *Service) SetDayOff(discordUserID string, year, month, day int) error {
-	user, err := s.Repo.GetUserByDiscordUserID(discordUserID)
+	user, err := s.Repo.FindUserByDiscordUserID(discordUserID)
 	if err != nil {
 		return errs.ErrUserNotFound
 	}

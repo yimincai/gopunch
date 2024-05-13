@@ -37,7 +37,7 @@ func (c *CommandUpdateAccount) Exec(ctx *bot.Context) (err error) {
 		return
 	}
 
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	user, err := c.Svc.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errs.ErrUserNotFound

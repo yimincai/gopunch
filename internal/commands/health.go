@@ -26,7 +26,7 @@ func (c *CommandHealth) Description() string {
 }
 
 func (c *CommandHealth) Exec(ctx *bot.Context) (err error) {
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	user, err := c.Svc.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		return errs.ErrUserNotFound
 	}

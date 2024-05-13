@@ -14,8 +14,8 @@ func (r *Repo) CreateUser(user *domain.User) (*domain.User, error) {
 	return user, nil
 }
 
-// GetUserByAccount implements Repository.
-func (r *Repo) GetUserByAccount(account string) (*domain.User, error) {
+// FindUserByAccount implements Repository.
+func (r *Repo) FindUserByAccount(account string) (*domain.User, error) {
 	var user *domain.User
 	if err := r.Db.Where("account = ?", account).First(&user).Error; err != nil {
 		return nil, err
@@ -24,8 +24,8 @@ func (r *Repo) GetUserByAccount(account string) (*domain.User, error) {
 	return user, nil
 }
 
-// GetUserByDiscordUserID implements Repository.
-func (r *Repo) GetUserByDiscordUserID(discordUserID string) (*domain.User, error) {
+// FindUserByDiscordUserID implements Repository.
+func (r *Repo) FindUserByDiscordUserID(discordUserID string) (*domain.User, error) {
 	var user *domain.User
 	if err := r.Db.Where("discord_user_id = ?", discordUserID).First(&user).Error; err != nil {
 		return nil, err
@@ -34,8 +34,8 @@ func (r *Repo) GetUserByDiscordUserID(discordUserID string) (*domain.User, error
 	return user, nil
 }
 
-// GetUsers implements Repository.
-func (r *Repo) GetUsers() ([]*domain.User, error) {
+// FindUsers implements Repository.
+func (r *Repo) FindUsers() ([]*domain.User, error) {
 	var users []*domain.User
 
 	if err := r.Db.Find(&users).Error; err != nil {
@@ -43,6 +43,16 @@ func (r *Repo) GetUsers() ([]*domain.User, error) {
 	}
 
 	return users, nil
+}
+
+// FindUserByID implements Repository.
+func (r *Repo) FindUserByID(userID string) (*domain.User, error) {
+	var user *domain.User
+	if err := r.Db.Where("id = ?", userID).First(&user).Error; err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
 
 // DeleteUserByAccount implements Repository.

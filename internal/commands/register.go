@@ -28,7 +28,7 @@ func (c *CommandRegister) Description() string {
 
 func (c *CommandRegister) Exec(ctx *bot.Context) (err error) {
 	// check if the user is already registered
-	existUser, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	existUser, err := c.Svc.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err == nil {
 		response := fmt.Sprintf("You are already registered as %s \nif you want to overwrite it, please using `%sForceRegister <account> <password>`", existUser.Account, c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, response)

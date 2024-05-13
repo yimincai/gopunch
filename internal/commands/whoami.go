@@ -28,7 +28,7 @@ func (c *CommandWhoAmI) Description() string {
 }
 
 func (c *CommandWhoAmI) Exec(ctx *bot.Context) (err error) {
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	user, err := c.Svc.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return errs.ErrUserNotFound

@@ -30,7 +30,7 @@ func (c *CommandPrintSchedule) Description() string {
 
 func (c *CommandPrintSchedule) Exec(ctx *bot.Context) (err error) {
 	// check if the user is already registered
-	user, err := c.Svc.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	user, err := c.Svc.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			response := fmt.Sprintf("You are not registered yet, please register first using `%sRegister <account> <password>`", c.Svc.Cfg.Prefix)

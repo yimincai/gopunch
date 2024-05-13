@@ -16,7 +16,7 @@ func (a *RequiredAdminPermission) Exec(ctx *bot.Context, cmd bot.Command) (next 
 		return true, nil
 	}
 
-	user, err := a.Repo.GetUserByDiscordUserID(ctx.Message.Author.ID)
+	user, err := a.Repo.FindUserByDiscordUserID(ctx.Message.Author.ID)
 	if err != nil {
 		return false, errs.ErrUserNotFound
 	}

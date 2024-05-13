@@ -27,7 +27,7 @@ func (c *CommandGetUsers) Description() string {
 
 func (c *CommandGetUsers) Exec(ctx *bot.Context) (err error) {
 	var users []*domain.User
-	users, err = c.Svc.Repo.GetUsers()
+	users, err = c.Svc.Repo.FindUsers()
 	if err != nil {
 		return errs.ErrInternalError
 	}
