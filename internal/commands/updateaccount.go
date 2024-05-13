@@ -29,7 +29,7 @@ func (c *CommandUpdateAccount) Description() string {
 
 func (c *CommandUpdateAccount) Exec(ctx *bot.Context) (err error) {
 	if len(ctx.Args) != 2 {
-		usage := fmt.Sprintf("Usage: %sForceRegister <account> <password>", c.Svc.Cfg.Prefix)
+		usage := fmt.Sprintf("Usage: %sUpdateAccount <account> <password>", c.Svc.Cfg.Prefix)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, usage)
 		if err != nil {
 			return errs.ErrSendingMessage

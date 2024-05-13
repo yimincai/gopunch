@@ -17,7 +17,7 @@ var (
 	ErrInvalidDate       = errors.New("invalid date, please check the date format 📅")
 	ErrDeleteUserFailed  = errors.New("delete user failed 😣, please contact admin 👨‍💻")
 	ErrLoginVerifyFailed = errors.New("login verify failed 😦, please check your account and password 🤔")
-	ErrLoginFailed       = errors.New("login failed 😦, please check your account and password and force register again 🤔")
+	ErrLoginFailed       = errors.New("login failed 😦, please check your account and password or update account and password 🤔")
 	ErrPunchOnTimeFailed = errors.New("punch on time failed 🕰️")
 )
 
