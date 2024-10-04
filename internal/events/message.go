@@ -37,6 +37,6 @@ func (h *MessageHandler) Handler(s *discordgo.Session, m *discordgo.MessageCreat
 
 	_, err = s.ChannelMessageSend(channel.ID, response)
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
+		logger.Errorf("Error sending message to discord user %s: %s", m.Author.ID, err)
 	}
 }

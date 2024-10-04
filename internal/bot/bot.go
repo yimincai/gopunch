@@ -60,7 +60,9 @@ func (b *Bot) Run() {
 		logger.Panicf("Error scheduling: %v", err)
 	}
 
-	b.Session.Identify.Intents = discordgo.IntentDirectMessages
+	b.Session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildMembers |
+		discordgo.IntentsGuildMessages |
+		discordgo.IntentsDirectMessages)
 
 	err = b.Session.Open()
 	if err != nil {

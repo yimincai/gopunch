@@ -202,7 +202,7 @@ func (s *Service) Punch(userID string) {
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// no day off record found, continue
 	} else if err != nil {
-		logger.Errorf("Error finding day off: %s", err)
+		logger.Errorf("Error finding day off on userID %s: %s", userID, err)
 		return
 	}
 
@@ -222,7 +222,7 @@ func (s *Service) Punch(userID string) {
 		// notify user that login is failed with bot
 		_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled login failed at %s", user.Account, utils.TimeFormat(time.Now())))
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
+			logger.Errorf("Error sending message to user %s: %s", user.Account, err)
 		}
 		logger.Errorf("Error while login user %s, schedule skipped: %s", user.Account, err)
 		return
@@ -233,7 +233,7 @@ func (s *Service) Punch(userID string) {
 		// notify user that punch is failed with bot
 		_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s scheduled punch failed at %s", user.Account, utils.TimeFormat(time.Now())))
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
+			logger.Errorf("Error sending message to user %s: %s", user.Account, err)
 		}
 		logger.Errorf("Error punching user %s: %s", user.Account, err)
 		return
@@ -242,7 +242,7 @@ func (s *Service) Punch(userID string) {
 	// notify user that punch is done with bot
 	_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s scheduled punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
 	if err != nil {
-		logger.Errorf("Error sending message: %s", err)
+		logger.Errorf("Error sending message to user %s: %s", user.Account, err)
 	}
 }
 
@@ -441,7 +441,7 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 				// notify user that punch is failed with bot
 				_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("❌ %s schedule punch failed at %s", user.Account, utils.TimeFormat(time.Now())))
 				if err != nil {
-					logger.Errorf("Error sending message: %s", err)
+					logger.Errorf("Error sending message to user %s: %s", user.Account, err)
 				}
 				logger.Error(err)
 				return
@@ -450,7 +450,7 @@ func (s *Service) DefaultSchedulePunchAllUsers() error {
 			// notify user that punch is done with bot
 			_, err = s.Session.ChannelMessageSend(channel.ID, fmt.Sprintf("✅ %s schedule punched successfully at %s", user.Account, utils.TimeFormat(time.Now())))
 			if err != nil {
-				logger.Errorf("Error sending message: %s", err)
+				logger.Errorf("Error sending message to user %s: %s", user.Account, err)
 			}
 		}(user)
 	}

@@ -58,7 +58,7 @@ func (c *CommandHandler) HandleMessage(s *discordgo.Session, e *discordgo.Messag
 	if !ok || cmd == nil {
 		_, err := s.ChannelMessageSend(e.ChannelID, "Command not found, try `!help`")
 		if err != nil {
-			logger.Errorf("Error sending message: %s", err)
+			logger.Errorf("Error sending message to discord user %s: %s", e.Author.ID, err)
 		}
 		return
 	}

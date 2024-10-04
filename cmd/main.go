@@ -70,7 +70,7 @@ func registerCommands(b *bot.Bot) {
 		logger.Errorf("Error executing command: %v", err)
 		_, err = ctx.Session.ChannelMessageSend(ctx.Message.ChannelID, "⚠️  An error occurred while executing the command. \n❌ error: "+err.Error())
 		if err != nil {
-			logger.Errorf("Error sending message: %v", err)
+			logger.Errorf("Error sending message to channelID %s: %v", ctx.Message.ChannelID, err)
 		}
 	}
 
